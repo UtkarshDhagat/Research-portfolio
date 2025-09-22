@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="color-scheme" content="dark"/>
+  <title>Utkarsh Dhagat - Audio Source Separation Journey</title>
+  <meta name="description" content="Utkarsh Dhagat — CS undergrad @ VIT Chennai. Audio Source Separation & Deep Learning Researcher."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #131313;
+      --fg: #ffffff;
+      --fg-secondary: #c3c2c2;
+      --fg-muted: #6a6969;
+      --accent: #60a5fa;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    .container {
+      max-width: 64rem;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    /* Navigation */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.875rem;
+      color: var(--fg-secondary);
+      text-decoration: none;
+      transition: color 200ms;
+    }
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    /* Header */
+    .header {
+      margin-bottom: 4rem;
+    }
+    .header > * {
+      margin-bottom: 1rem;
+    }
+    .name {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--fg);
+      opacity: 0;
+      animation: fade-in 600ms ease-out 100ms forwards;
+    }
+    .meta {
+      color: var(--fg-muted);
+      font-size: 0.875rem;
+    }
+    .intro {
+      color: var(--fg-secondary);
+      opacity: 0;
+      transform: translateY(8px);
+      animation: fade-in-up 500ms ease-out 300ms forwards;
+    }
+    /* Minimalist links */
+    .minimal-links {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .minimal-links a {
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 200ms;
+    }
+    .minimal-links a:hover {
+      color: var(--accent);
+    }
+    /* Sections */
+    .section {
+      margin-bottom: 4rem;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: fade-in-up 500ms ease-out forwards;
+    }
+    .section:nth-child(4) { animation-delay: 400ms; }
+    .section:nth-child(5) { animation-delay: 500ms; }
+    .section:nth-child(6) { animation-delay: 600ms; }
+    .section:nth-child(7) { animation-delay: 700ms; }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+    }
+    .section-title::before {
+      content: '•';
+      color: var(--accent);
+      margin-right: 0.5rem;
+    }
+    /* Items */
+    .items {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .item {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      transition: color 200ms;
+      border: 1px solid transparent;
+      padding: 1.5rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .item:hover {
+      border-color: var(--accent);
+      background: rgba(96, 165, 250, 0.05);
+    }
+    .item:hover .item-title {
+      color: var(--accent);
+    }
+    .item-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+      transition: color 200ms;
+    }
+    .item-role {
+      font-size: 0.875rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .item-description {
+      color: var(--fg-secondary);
+      margin-bottom: 1rem;
+    }
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tech-tag {
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--accent);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(96, 165, 250, 0.3);
+    }
+    /* Architecture Analysis Box */
+    .architecture-analysis {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+    .analysis-title {
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .analysis-content {
+      color: var(--fg-secondary);
+      font-size: 0.9rem;
+    }
+    /* Links */
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .links a {
+      font-size: 0.875rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 200ms;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--fg-muted);
+      border-radius: 4px;
+    }
+    .links a:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    /* Timeline indicator */
+    .timeline-date {
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+      float: right;
+      font-style: italic;
+    }
+    /* Animations */
+    @keyframes fade-in {
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes fade-in-up {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    /* Responsive */
+    @media (max-width: 48rem) {
+      .container {
+        padding: 2rem 1rem;
+      }
+      .nav {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      .timeline-date {
+        float: none;
+        display: block;
+        margin-top: 0.5rem;
+      }
+    }
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <nav class="nav">
+      <div></div>
+      <ul class="nav-links">
+        <li><a href="#research">Research</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#architectures">Architectures</a></li>
+        <li><a href="#achievements">Achievements</a></li>
+      </ul>
+    </nav>
+
+    <header class="header">
+      <h1 class="name">Audio Source Separation Journey</h1>
+      <p class="meta">Utkarsh Dhagat • CS Undergrad @ VIT Chennai • AI Researcher</p>
+      <p class="intro">
+        Exploring deep learning architectures for music source separation, from custom U-Net implementations 
+        to hybrid Transformer models. This portfolio documents my journey in untangling complex acoustic 
+        mixtures into their constituent musical sources.
+      </p>
+      <div class="minimal-links">
+        <a href="https://github.com/UtkarshDhagat">github</a>
+        <a href="mailto:utkarsh@example.com">email</a>
+        <a href="https://linkedin.com/in/utkarshdhagat">linkedin</a>
+      </div>
+    </header>
+
+    <section class="section" id="research">
+      <h2 class="section-title">Research Foundation</h2>
+      <div class="items">
+        <div class="item">
+          <div class="timeline-date">September 2025</div>
+          <h3 class="item-title">MSTU Architecture Analysis</h3>
+          <p class="item-role">Hybrid Transformer-UNet Study</p>
+          <p class="item-description">
+            Analyzed the MSTU (Music Separation Transformer-UNet) architecture that combines 
+            convolutional downsampling/upsampling with Transformer encoders at the bottleneck 
+            for audio source separation.
+          </p>
+          <div class="architecture-analysis">
+            <div class="analysis-title">Key Insights</div>
+            <div class="analysis-content">
+              This architecture effectively merges local feature extraction capabilities of UNet 
+              with global attention mechanisms of Transformers, addressing long-range dependencies 
+              in audio signals while maintaining computational efficiency.
+            </div>
+          </div>
+          <div class="tech-stack">
+            <span class="tech-tag">Transformer</span>
+            <span class="tech-tag">UNet</span>
+            <span class="tech-tag">Attention Mechanisms</span>
+            <span class="tech-tag">MUSDB18</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="projects">
+      <h2 class="section-title">Core Projects</h2>
+      <div class="items">
+        <div class="item">
+          <div class="timeline-date">April 2025</div>
+          <h3 class="item-title">Custom U-Net for Audio Source Separation</h3>
+          <p class="item-role">Deep Learning Architecture • From Scratch Implementation</p>
+          <p class="item-description">
+            Engineered a sophisticated audio separation model that reimagines how neural networks 
+            untangle complex acoustic mixtures. The architecture serves as both a frequency detective 
+            and temporal storyteller, learning to compress musical complexity into increasingly 
+            abstract representations.
+          </p>
+
+          <div class="architecture-analysis">
+            <div class="analysis-title">Engineering Philosophy</div>
+            <div class="analysis-content">
+              <strong>The Innovation Trilogy:</strong><br>
+              • <em>Residual Connections with a Twist:</em> Depthwise-separable blocks treating spatial 
+              and channel information as distinct but interrelated problems<br>
+              • <em>Strategic Attention Placement:</em> Attention blocks positioned at crucial separation 
+              decision points<br>
+              • <em>Memory as Design Constraint:</em> Gradient checkpointing transforms memory limits 
+              into architectural opportunities
+            </div>
+          </div>
+
+          <div class="architecture-analysis">
+            <div class="analysis-title">Training Revolution</div>
+            <div class="analysis-content">
+              Preprocessing as performance art: precomputed spectrograms transformed training from 
+              3-hour marathons to 7-minute sprints. StereoSpectrogramLoss ensures separated instruments 
+              retain spatial imaging and musical essence beyond mathematical accuracy.
+            </div>
+          </div>
+
+          <div class="tech-stack">
+            <span class="tech-tag">PyTorch</span>
+            <span class="tech-tag">MUSDB18-HQ</span>
+            <span class="tech-tag">Attention Mechanisms</span>
+            <span class="tech-tag">Gradient Checkpointing</span>
+            <span class="tech-tag">Multi-GPU</span>
+            <span class="tech-tag">CUDA</span>
+          </div>
+
+          <div class="links">
+            <a href="https://github.com/UtkarshDhagat/Audio-Source-Separation">View Repository</a>
+            <a href="#demo">Listen to Samples</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architectures">
+      <h2 class="section-title">Architectural Innovations</h2>
+      <div class="items">
+        <div class="item">
+          <h3 class="item-title">ModifiedUNet Architecture</h3>
+          <p class="item-role">Custom Neural Network Design</p>
+          <p class="item-description">
+            <strong>Core Philosophy:</strong> Music separation requires understanding both temporal and 
+            spectral interplay between instruments. Each encoder layer asks progressively deeper questions: 
+            "what frequencies are present?" → "how do these frequencies relate?" → "which patterns belong to which instruments?"
+          </p>
+
+          <div class="architecture-analysis">
+            <div class="analysis-title">Component Breakdown</div>
+            <div class="analysis-content">
+              <strong>ResidualBlocks:</strong> Depthwise-separable convolutions with focused attention (depthwise) 
+              and holistic understanding (pointwise)<br><br>
+              <strong>AttentionBlocks:</strong> Channel-wise attention with grouped convolutions for spectral importance weighting<br><br>
+              <strong>ConvLayer Modules:</strong> Unified components supporting both standard and transposed 
+              convolutions with GroupNorm stability
+            </div>
+          </div>
+
+          <div class="tech-stack">
+            <span class="tech-tag">Depthwise-Separable Conv</span>
+            <span class="tech-tag">GroupNorm</span>
+            <span class="tech-tag">Channel Attention</span>
+            <span class="tech-tag">Skip Connections</span>
+          </div>
+        </div>
+
+        <div class="item">
+          <h3 class="item-title">StereoSpectrogramLoss</h3>
+          <p class="item-role">Custom Loss Function Design</p>
+          <p class="item-description">
+            Revolutionary loss combining log-magnitude and linear-magnitude MSE with mid/side stereo encoding. 
+            Preserves spatial imaging and timbral qualities that make music emotionally compelling, ensuring 
+            separated instruments retain original stereo characteristics.
+          </p>
+
+          <div class="tech-stack">
+            <span class="tech-tag">Mid/Side Encoding</span>
+            <span class="tech-tag">Multi-Component Loss</span>
+            <span class="tech-tag">Stereo Preservation</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="achievements">
+      <h2 class="section-title">Performance Milestones</h2>
+      <div class="items">
+        <div class="item">
+          <h3 class="item-title">Training Efficiency Breakthrough</h3>
+          <p class="item-role">Optimization Achievement</p>
+          <p class="item-description">
+            Achieved <strong>0.0474 training loss</strong> after just one epoch on MUSDB18-HQ dataset. 
+            Preprocessing optimization reduced epoch time from 3+ hours to 7-10 minutes on local hardware, 
+            proving that thoughtful architecture design enables both efficient and effective learning.
+          </p>
+
+          <div class="architecture-analysis">
+            <div class="analysis-title">Technical Impact</div>
+            <div class="analysis-content">
+              The model doesn't just separate instruments—it preserves musical essence while cleanly 
+              isolating sources. This demonstrates how modern deep learning principles can be specifically 
+              tailored for audio source separation challenges.
+            </div>
+          </div>
+
+          <div class="tech-stack">
+            <span class="tech-tag">Fast Convergence</span>
+            <span class="tech-tag">Memory Optimization</span>
+            <span class="tech-tag">High-Quality Separation</span>
+          </div>
+        </div>
+
+        <div class="item">
+          <h3 class="item-title">Multi-Scale Processing</h3>
+          <p class="item-role">Architecture Innovation</p>
+          <p class="item-description">
+            Successfully implemented hierarchical feature learning across frequency and temporal dimensions, 
+            enabling the network to capture both local spectral patterns and global musical structure 
+            simultaneously for superior separation quality.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--fg-muted); color: var(--fg-muted); font-size: 0.875rem;">
+      <p>© 2025 Utkarsh Dhagat • Audio Source Separation Research Journey</p>
+    </footer>
+  </div>
+</body>
+</html>
