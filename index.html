@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="color-scheme" content="dark"/>
+  <title>Utkarsh Dhagat | Audio Source Separation Research</title>
+  <meta name="description" content="Utkarsh Dhagat — Computer Science Research | Audio Source Separation, Multimodal AI, Edge Computing"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --fg: #ffffff;
+      --fg-secondary: #b3b3b3;
+      --fg-muted: #6a6969;
+      --accent: #60a5fa;
+      --border: rgba(255,255,255,0.08);
+      --card-bg: rgba(255,255,255,0.02);
+      --sidebar-bg: #0a0a0a;
+      --sidebar-hover: rgba(96, 165, 250, 0.1);
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-main);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      font-weight: 400;
+      font-size: 16px;
+    }
+    
+    /* Sidebar Styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 280px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      z-index: 1000;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+    
+    .sidebar.hidden {
+      transform: translateX(-280px);
+    }
+    
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .sidebar-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+    }
+    
+    .sidebar-subtitle {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+    
+    .sidebar-nav {
+      padding: 1rem 0;
+    }
+    
+    .nav-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .nav-section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      color: var(--fg-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      color: var(--fg);
+      background: var(--sidebar-hover);
+    }
+    
+    .nav-link.active {
+      color: var(--accent);
+      background: var(--sidebar-hover);
+      border-right: 2px solid var(--accent);
+    }
+    
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.75rem;
+      opacity: 0.7;
+    }
+    
+    .dropdown-btn {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown-btn:hover {
+      color: var(--fg);
+      background: var(--sidebar-hover);
+    }
+    
+    .dropdown-btn.active {
+      color: var(--accent);
+      background: var(--sidebar-hover);
+    }
+    
+    .dropdown-arrow {
+      margin-left: auto;
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .dropdown-btn.active .dropdown-arrow {
+      transform: rotate(90deg);
+    }
+    
+    .dropdown-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: rgba(0,0,0,0.3);
+    }
+    
+    .dropdown-content.show {
+      max-height: 500px;
+    }
+    
+    .dropdown-content .nav-link {
+      padding-left: 3rem;
+      font-size: 0.85rem;
+    }
+    
+    /* Toggle button */
+    .sidebar-toggle {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 1001;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem;
+      color: var(--fg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .sidebar-toggle:hover {
+      background: var(--sidebar-hover);
+    }
+    
+    .sidebar.hidden ~ .sidebar-toggle {
+      left: 1.5rem;
+    }
+    
+    .sidebar:not(.hidden) ~ .sidebar-toggle {
+      left: calc(280px + 1.5rem);
+    }
+    
+    /* Main content */
+    .main-content {
+      margin-left: 280px;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+    }
+    
+    .main-content.expanded {
+      margin-left: 0;
+    }
+    
+    .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+    
+    .header {
+  padding: 4rem 0 3rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;  /* Changed from 4rem to 2rem */
+}
+
+    
+    .name {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+    
+    .title {
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    
+    .intro {
+      color: var(--fg-secondary);
+      font-size: 1.1rem;
+      line-height: 1.7;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .section { margin-bottom: 5rem; }
+    
+    .project {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3rem;
+      margin-bottom: 4rem;
+    }
+    
+    .project-header { margin-bottom: 2.5rem; }
+    
+    .project-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+    
+    .project-meta {
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+    
+    .project-description {
+      color: var(--fg-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+    
+    .content-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin: 2rem 0 1rem 0;
+    }
+    
+    .content-description {
+      color: var(--fg-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .tech-tag {
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--accent);
+      padding: 0.4rem 0.8rem;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid rgba(96, 165, 250, 0.25);
+    }
+    
+    .image-container {
+      margin: 2rem 0;
+      text-align: center;
+    }
+    
+    .content-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      background: var(--card-bg);
+    }
+    
+    .image-caption {
+      color: var(--fg-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.4;
+    }
+    
+    /* Two column grid for RAG and AGV images */
+    .image-grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    
+    /* Three column grid for multimodal paper images */
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .grid-image-container {
+      text-align: center;
+    }
+    
+    .grid-image {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      margin-bottom: 1rem;
+    }
+    
+    /* Larger images for two-column grids */
+    .image-grid-two .grid-image {
+      height: 300px;
+    }
+    
+    .grid-caption {
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    
+    .results-section {
+      background: rgba(96, 165, 250, 0.03);
+      border: 1px solid rgba(96, 165, 250, 0.1);
+      border-radius: 8px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+    
+    .results-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    
+    .results-content {
+      color: var(--fg-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    .metrics-list {
+      list-style: none;
+      margin: 1rem 0;
+    }
+    
+    .metrics-list li {
+      color: var(--fg-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+      position: relative;
+    }
+    
+    .metrics-list li::before {
+      content: '•';
+      color: var(--accent);
+      position: absolute;
+      left: 0;
+      font-weight: 600;
+    }
+    
+    .metric-value {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    .mathematical-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .math-title {
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    
+    .equation {
+      font-family: 'Times New Roman', serif;
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 1rem 0;
+      padding: 1rem;
+      background: rgba(96, 165, 250, 0.05);
+      border-radius: 6px;
+    }
+    
+    .equation-explanation {
+      color: var(--fg-secondary);
+      font-size: 0.95rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+    
+    .technical-breakdown {
+      background: rgba(96, 165, 250, 0.03);
+      border-left: 4px solid var(--accent);
+      padding: 1.5rem;
+      margin: 2rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    
+    .breakdown-title {
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    
+    .breakdown-content {
+      color: var(--fg-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    
+    .resources-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .resources-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 1rem;
+    }
+    
+    /* Fixed resource links to always be in one line */
+    .resource-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    
+    .resource-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.6rem 1rem;
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--accent);
+      text-decoration: none;
+      border-radius: 6px;
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 200ms;
+      white-space: nowrap;
+    }
+    
+    .resource-link:hover {
+      background: rgba(96, 165, 250, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    .video-container {
+      margin: 2rem 0;
+    }
+    
+    /* Fixed video grid for exactly 3 videos */
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+    
+    /* Two column video grid for AGV section */
+    .video-grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1rem 0;
+    }
+    
+    .video-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .video-label {
+      padding: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .video-player { width: 100%; height: 250px; }
+    
+    .youtube-embed {
+      width: 100%;
+      height: 300px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+    
+    .audio-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    
+    .audio-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    .audio-label {
+      color: var(--fg);
+      font-weight: 500;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .audio-player { width: 100%; height: 32px; }
+    
+    .table-container {
+      overflow-x: auto;
+      margin: 2rem 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+    }
+    
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    
+    .results-table th {
+      background: rgba(96, 165, 250, 0.1);
+      color: var(--accent);
+      font-weight: 600;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    
+    .results-table td {
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      color: var(--fg-secondary);
+    }
+    
+    .results-table .model-name {
+      text-align: left;
+      font-weight: 500;
+      color: var(--fg);
+    }
+    
+    .results-table .highlight {
+      background: rgba(96, 165, 250, 0.1);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-280px);
+      }
+      
+      .sidebar.show-mobile {
+        transform: translateX(0);
+      }
+      
+      .main-content {
+        margin-left: 0;
+      }
+      
+      .sidebar-toggle {
+        left: 1rem !important;
+      }
+      
+      .container { padding: 0 1rem; }
+      .header { padding: 3rem 0 2rem 0; }
+      .name { font-size: 2rem; }
+      .project { padding: 2rem; }
+      .image-grid, .image-grid-two, .video-grid, .video-grid-two { grid-template-columns: 1fr; }
+      .resource-links { flex-direction: column; align-items: stretch; }
+      .resource-link { justify-content: center; }
+      .audio-container { grid-template-columns: 1fr; }
+      .youtube-embed, .video-player { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    
+    
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        
+        <div class="nav-item">
+          <a href="https://utkarshdhagat.github.io/Website/" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            Home
+          </a>
+        </div>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-item">
+          <button class="dropdown-btn" onclick="toggleDropdown('research-dropdown')">
+            <span class="nav-icon">🔬</span>
+            Research Work
+            <span class="dropdown-arrow">▶</span>
+          </button>
+          <div class="dropdown-content" id="research-dropdown">
+            <a href="#unet-project" class="nav-link">Custom U-Net Architecture</a>
+            <a href="#multimodal-project" class="nav-link">Multimodal Audio-Visual</a>
+            <a href="#mamba-project" class="nav-link">Hybrid Mamba Architecture</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-item">
+          <button class="dropdown-btn" onclick="toggleDropdown('industry-dropdown')">
+            <span class="nav-icon">🏢</span>
+            Professional Work
+            <span class="dropdown-arrow">▶</span>
+          </button>
+          <div class="dropdown-content" id="industry-dropdown">
+            <a href="#iisc-internship" class="nav-link">IISc Bengaluru </a>
+            <a href="#stemtec-internship" class="nav-link">StemTec Robotics </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-item">
+          <button class="dropdown-btn" onclick="toggleDropdown('software-dropdown')">
+            <span class="nav-icon">💻</span>
+            Open Source Projects
+            <span class="dropdown-arrow">▶</span>
+          </button>
+          <div class="dropdown-content" id="software-dropdown">
+            <a href="#ollash-project" class="nav-link">Ollash - Text-to-Shell</a>
+            <a href="#vitafile-project" class="nav-link">VitaFile - Health Management</a>
+            <a href="#mrig-project" class="nav-link">MRIG - Medical AI</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-item">
+          <a href="https://github.com/UtkarshDhagat" class="nav-link" target="_blank">
+            <span class="nav-icon">📂</span>
+            GitHub Profile
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0321856" class="nav-link" target="_blank">
+            <span class="nav-icon">📄</span>
+            PLOS ONE Publication
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Toggle Button -->
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    ☰
+  </button>
+  
+  <!-- Main Content -->
+  <div class="main-content" id="main-content">
+    <div class="container">
+      <header class="header" id="top">
+        <h1 class="name">Utkarsh Dhagat</h1>
+        <p class="title">Multimodal AI • Audio Source Separation</p>
+        <p class="intro">
+          Exploring Audio Wave by Wave
+        </p>
+      </header>
+
+      <section class="section">
+        <div class="project" id="unet-project">
+          <div class="project-header">
+            <h3 class="project-title">Custom U-Net Architecture for Audio Source Separation</h3>
+            <p class="project-meta">• In collaboration with Samsung Research • 2025</p>
+            <p class="project-description">
+              This is where my AI journey truly began – building a custom U-Net architecture from scratch for audio source separation. 
+What started as "let's see if I can make a computer tell vocals from drums" turned into a deep dive into the MUSDB18-HQ dataset 
+and countless nights of convincing my GTX 1650 to cooperate. The model separates stereo audio into four stems (vocals, drums, bass, other) 
+using spectrograms and gradient checkpointing – because apparently even neural networks need to budget their memory usage.
+
+            </p>
+            <div class="tech-stack">
+              <span class="tech-tag">PyTorch</span>
+              <span class="tech-tag">MUSDB18-HQ</span>
+              <span class="tech-tag">Gradient Checkpointing</span>
+              <span class="tech-tag">Custom Loss Functions</span>
+              <span class="tech-tag">CUDA Optimization</span>
+            </div>
+          </div>
+
+          <div class="image-container">
+            <img src="1.jpg" alt="Custom U-Net Architecture" class="content-image">
+            <p class="image-caption">
+              Custom U-Net architecture featuring encoder-decoder structure with residual blocks, attention mechanisms, 
+              and memory-efficient gradient checkpointing for training on resource-constrained hardware
+            </p>
+          </div>
+
+          <div class="content-title">Technical Implementation</div>
+          <div class="content-description">
+            The architecture employs progressive channel expansion from 64 to 256 channels through the encoder, with skip connections 
+            preserving high-frequency information. Attention mechanisms focus on spectrally important regions while depthwise-separable 
+            convolutions reduce computational overhead. GroupNorm with 8 groups ensures stable training across varying batch sizes.
+          </div>
+
+          <div class="results-section">
+            <div class="results-title">Performance Metrics</div>
+            <div class="results-content">
+              <ul class="metrics-list">
+                <li>Model complexity: <span class="metric-value">2.3M parameters</span> with encoder-decoder architecture</li>
+                <li>Memory efficiency: <span class="metric-value">3.8GB VRAM</span> usage through gradient checkpointing</li>
+                <li>Training convergence: <span class="metric-value">0.0474 first epoch loss</span> with 7-10 minute epochs</li>
+                <li>Custom loss function: L1, spectral convergence, and perceptual term combination</li>
+                <li>Hardware optimization: GTX 1650 compatible with 32-batch training capability</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="audio-container">
+            <div class="audio-item">
+              <div class="audio-label">Original Mix</div>
+              <audio controls class="audio-player">
+                <source src="mixture_mix.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Vocals</div>
+              <audio controls class="audio-player">
+                <source src="mixture_vocals.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Drums</div>
+              <audio controls class="audio-player">
+                <source src="mixture_drums.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Bass</div>
+              <audio controls class="audio-player">
+                <source src="mixture_bass.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Other</div>
+              <audio controls class="audio-player">
+                <source src="mixture_other.wav" type="audio/wav">
+              </audio>
+            </div>
+          </div>
+
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="unet.ipynb" class="resource-link">Implementation Notebook</a>
+              <a href="https://github.com/UtkarshDhagat/Audio-Source-Separation" class="resource-link">GitHub Repository</a>
+              <a href="checkpoint.pth" class="resource-link">Model Checkpoint</a>
+              <a href="https://sigsep.github.io/datasets/musdb.html" class="resource-link">MUSDB18-HQ Dataset</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project" id="multimodal-project">
+          <div class="project-header">
+            <h3 class="project-title">Multimodal Audio-Visual Source Separation</h3>
+            <p class="project-meta">Published Research • PLOS ONE 2025 • Collaborative Work</p>
+            <p class="project-description">
+              Research on multimodal audio-visual source separation combining ConvTasNet, DPRNN-TasNet, and visual attention mechanisms. 
+              The system processes 24 RGB frames per second while performing audio separation, with attention mechanisms that 
+              dynamically focus on active speakers for improved separation quality.
+            </p>
+            <div class="tech-stack">
+              <span class="tech-tag">ConvTasNet</span>
+              <span class="tech-tag">DPRNN-TasNet</span>
+              <span class="tech-tag">Cross-Modal Attention</span>
+              <span class="tech-tag">VGG19</span>
+              <span class="tech-tag">AVE Dataset</span>
+              <span class="tech-tag">DMRN Fusion</span>
+            </div>
+          </div>
+
+          <div class="image-container">
+            <img src="2.jpg" alt="Multimodal Architecture" class="content-image">
+            <p class="image-caption">
+              Complete multimodal architecture integrating VGG19 visual features with ConvTasNet/DPRNN-TasNet audio processing 
+              through sophisticated cross-modal attention mechanisms
+            </p>
+          </div>
+
+          <div class="content-title">Core Architecture Components</div>
+          <div class="content-description">
+            The multimodal system combines three neural architectures working in harmony. ConvTasNet handles time-domain audio 
+            separation using learned filterbanks, DPRNN-TasNet manages long-sequence modeling through dual-path processing, 
+            and DMRN fuses visual and audio modalities with sophisticated attention mechanisms.
+          </div>
+
+          <div class="image-grid">
+            <div class="grid-image-container">
+              <img src="3.jpg" alt="ConvTasNet" class="grid-image">
+              <p class="grid-caption">ConvTasNet encoder-separator-decoder pipeline with temporal convolutional networks</p>
+            </div>
+            <div class="grid-image-container">
+              <img src="4.jpg" alt="DPRNN" class="grid-image">
+              <p class="grid-caption">DPRNN dual-path processing with intra-chunk and inter-chunk RNN pathways</p>
+            </div>
+            <div class="grid-image-container">
+              <img src="5.jpg" alt="DMRN" class="grid-image">
+              <p class="grid-caption">DMRN bidirectional fusion with residual connections and cross-modal enhancement</p>
+            </div>
+          </div>
+
+          <div class="mathematical-section">
+            <div class="math-title">ConvTasNet Mathematical Foundation</div>
+            <div class="equation">
+              <em>X(n,i) = Σ<sub>l=0</sub><sup>L-1</sup> s(iD+l) × h<sub>enc</sub><sup>n</sup>(L-l)</em>
+            </div>
+            <div class="equation-explanation">
+              Where s(t) is the input waveform, h<sub>enc</sub><sup>n</sup> are N=256 learned encoder filters of length L=16, 
+              and D=8 is the frame shift. The encoder transforms raw audio into learned time-domain representations.
+            </div>
+          </div>
+
+          
+
+          <div class="mathematical-section">
+            <div class="math-title">Audio-Visual Attention Mechanism</div>
+            <div class="equation">
+              <em>α<sub>i,t</sub> = Softmax(W<sub>f</sub>e<sub>i,t</sub>)</em><br/>
+              <em>v<sub>att,t</sub> = Σ<sub>i=1</sub><sup>49</sup> α<sub>i,t</sub> × V<sub>i,t</sub></em>
+            </div>
+            <div class="equation-explanation">
+              Attention weights α create a probability distribution over 49 spatial locations (7×7 grid) from VGG19 features. 
+              The attended visual context vector v<sub>att,t</sub> dynamically focuses on regions correlating with audio activity.
+            </div>
+          </div>
+
+          <div class="image-container">
+            <img src="6.jpg" alt="Performance Results" class="content-image">
+            <p class="image-caption">Performance comparison</p>
+          </div>
+
+          <div class="content-title">Quantitative Performance Analysis</div>
+          <div class="content-description">
+            DPRNN-TasNet achieved 18.6 dB SI-SNRi improvement — a substantial leap over traditional methods. Global Layer Normalization 
+            proved superior with a consistent 4.8 dB advantage over cumulative approaches, demonstrating the importance of global 
+            feature statistics for separation tasks.
+          </div>
+
+          <div class="image-container">
+            <img src="7.jpg" alt="Waveform Analysis" class="content-image">
+            <p class="image-caption">Waveform separation comparison showing original mixed audio transformed into clean, separated streams with preserved speaker characteristics and eliminated interference</p>
+          </div>
+
+          <div class="content-title">Waveform Analysis and Temporal Patterns</div>
+          <div class="content-description">
+            The separated outputs preserve speech characteristics including natural conversation rhythm, meaningful pauses, 
+            and emotional inflections. Temporal patterns reveal preserved speaker-specific features while eliminating 
+            cross-talk interference, demonstrating the model's ability to maintain speech naturalness.
+          </div>
+
+          <div class="image-container">
+            <img src="8.jpg" alt="Visual Processing" class="content-image">
+            <p class="image-caption">Input video which is shooted at Samsung Research Seed lab</p>
+          </div>
+
+          <div class="content-title">Visual Intelligence Integration</div>
+          <div class="content-description">
+            The visual component adds human-like understanding
+            with audio activity, and spatial localization for precise speaker mapping. This creates a comprehensive understanding 
+            of visual communication patterns beyond simple video frame processing.
+          </div>
+
+          <div class="image-container">
+            <img src="9.jpg" alt="Attention Visualization" class="content-image">
+            <p class="image-caption">Attention heat maps showing dynamic focus on active speakers with intensity following conversation flow across multiple participants</p>
+          </div>
+
+          <div class="content-title">Attention Visualization and Model Interpretability</div>
+          <div class="content-description">
+            The attention heat maps reveal the model's decision-making process with bright regions on active speakers and 
+            cooler regions on background areas. Dynamic shifts follow conversation flow, demonstrating artificial intuition 
+            in focusing on relevant visual and audio cues.
+          </div>
+
+          <div class="results-section">
+            <div class="results-title">Research Outcomes</div>
+            <div class="results-content">
+              <ul class="metrics-list">
+                <li>Classification accuracy: <span class="metric-value">71.88%</span> on AVE dataset (28 event categories)</li>
+                <li>Audio separation improvement: <span class="metric-value">18.6 dB SI-SNRi</span> and <span class="metric-value">18.7 dB SDRi</span></li>
+                
+                <li>Real-time processing: <span class="metric-value">24 FPS</span> visual processing with audio separation</li>
+                
+              </ul>
+            </div>
+          </div>
+
+          <div class="video-container">
+            
+            <div class="video-grid">
+              <div class="video-item">
+                <div class="video-label">Input Challenge</div>
+                <video controls class="video-player">
+                  <source src="download.mp4" type="video/mp4">
+                </video>
+              </div>
+              <div class="video-item">
+                <div class="video-label">Speaker 1 Output</div>
+                <video controls class="video-player">
+                  <source src="sidt.mp4" type="video/mp4">
+                </video>
+              </div>
+              <div class="video-item">
+                <div class="video-label">Speaker 2 Output</div>
+                <video controls class="video-player">
+                  <source src="utk.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+          </div>
+
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="paper.pdf" class="resource-link">PLOS ONE Paper</a>
+              <a href="supp.py" class="resource-link">Implementation Code</a>
+              <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0321856" class="resource-link">Publication Link</a>
+              <a href="https://github.com/YapengTian/AVE-ECCV18" class="resource-link">AVE Dataset</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project" id="mamba-project">
+          <div class="project-header">
+            <h3 class="project-title">Hybrid Mamba Architecture for Efficient Audio Source Separation (This research is due to be published) </h3>
+            <p class="project-meta">• In collaboration with Samsung Research • 2025</p>
+            <p class="project-description">
+              Development of a hybrid Mamba-based architecture for audio source separation combining time-frequency and time-domain 
+              processing with linear-complexity sequence modeling. The system achieves competitive separation quality with 
+              significantly reduced computational requirements through selective state-space modeling.
+            </p>
+            <div class="tech-stack">
+              <span class="tech-tag">Mamba State-Space</span>
+              <span class="tech-tag">Hybrid Processing</span>
+              <span class="tech-tag">Linear O(n) Complexity</span>
+              <span class="tech-tag">Stereo Spatial Cues</span>
+              <span class="tech-tag">Multi-Domain Features</span>
+              <span class="tech-tag">DNR v3 Dataset</span>
+            </div>
+          </div>
+
+          <div class="image-container">
+            <img src="mamba.jpg" alt="Mamba Architecture" class="content-image">
+            <p class="image-caption">
+              Hybrid Mamba architecture featuring multi-domain encoder, linear-complexity Mamba backbone, 
+              and specialized decoders for speech, music, and noise separation
+            </p>
+          </div>
+
+          <div class="content-title">Mamba State-Space Innovation</div>
+          <div class="content-description">
+            Traditional Transformers suffer from quadratic attention complexity with long audio sequences, while RNNs process 
+            sequentially creating bottlenecks. Mamba revolutionizes this with selective state-space modeling achieving linear 
+            complexity that scales effortlessly with sequence length while maintaining the ability to capture long-range dependencies.
+          </div>
+
+          <div class="mathematical-section">
+            <div class="math-title">Multi-Domain Feature Extraction</div>
+            <div class="equation">
+              <em>ILD = 20 log₁₀(|X_L| + ε)/(|X_R| + ε)</em><br/>
+              <em>IPD = ∠X_L - ∠X_R</em><br/>
+              <em>F_fused = Concat[Pool(F_TF), Broadcast(F_TD)]</em>
+            </div>
+            <div class="equation-explanation">
+              Inter-channel level differences (ILD) and phase differences (IPD) capture stereo spatial information. 
+              Time-frequency features undergo 4× frequency pooling before fusion with broadcasted time-domain embeddings, 
+              creating rich multi-domain representations for the Mamba backbone.
+            </div>
+          </div>
+
+          
+
+          <div class="results-section">
+            <div class="results-title">Efficiency Analysis</div>
+            <div class="results-content">
+              <ul class="metrics-list">
+                <li>Model efficiency: <span class="metric-value">3.26M parameters</span> (11× smaller than BandIt)</li>
+                <li>Computational cost: <span class="metric-value">205.4 GFLOPs</span> with linear O(n) complexity</li>
+                <li>Speech separation: <span class="metric-value">8.23 dB SDR</span> performance maintained</li>
+                <li>Frequency pooling: <span class="metric-value">4× reduction</span> in computational load</li>
+                <li>Spatial processing: ILD/IPD feature extraction for stereo audio understanding</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Architecture</th>
+                  <th>Parameters</th>
+                  <th>GFLOPs</th>
+                  <th>Speech SDR</th>
+                  <th>Music SDR</th>
+                  <th>Noise SDR</th>
+                  <th>Average SDR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="model-name">BSRNN-LSTM12</td>
+                  <td>77.4M</td>
+                  <td>1386.5</td>
+                  <td>14.2</td>
+                  <td>6.3</td>
+                  <td>7.0</td>
+                  <td>9.2</td>
+                </tr>
+                <tr>
+                  <td class="model-name">BandIt</td>
+                  <td>36.0M</td>
+                  <td>363.5</td>
+                  <td>15.7</td>
+                  <td>8.7</td>
+                  <td>9.7</td>
+                  <td>11.4</td>
+                </tr>
+                <tr>
+                  <td class="model-name">Hybrid Demucs v3</td>
+                  <td>83.6M</td>
+                  <td>80.5</td>
+                  <td>14.1</td>
+                  <td>6.3</td>
+                  <td>8.9</td>
+                  <td>9.8</td>
+                </tr>
+                
+                <tr>
+                  <td class="model-name">Open-Unmix</td>
+                  <td>22.1M</td>
+                  <td>5.7</td>
+                  <td>11.6</td>
+                  <td>4.9</td>
+                  <td>5.8</td>
+                  <td>7.4</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="audio-container">
+            <div class="audio-item">
+              <div class="audio-label">Isolated Speech </div>
+              <audio controls class="audio-player">
+                <source src="m3.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Isolated Noise</div>
+              <audio controls class="audio-player">
+                <source src="m1.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="audio-item">
+              <div class="audio-label">Isolated Music</div>
+              <audio controls class="audio-player">
+                <source src="m2.wav" type="audio/wav">
+              </audio>
+            </div>
+            
+          </div>
+
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="" class="resource-link">GitHub Repository(Code not yet public)</a>
+              <a href="https://example.com/mamba-checkpoints" class="resource-link">Model Checkpoints(Not yet released)</a>
+              <a href="mamba.jpg" class="resource-link">Documentation</a>
+              <a href="https://github.com/kwatcharasupat/divide-and-remaster-v3" class="resource-link">DNR v3 Dataset</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="project" id="iisc-internship">
+          <div class="project-header">
+            <h3 class="project-title">Production AI Systems Development</h3>
+            <p class="project-meta">Summer Research Internship • IISc Bengaluru • May-July 2025</p>
+            <p class="project-description">
+              Developed large-scale Retrieval-Augmented Generation pipelines and medical AI platforms at the Indian Institute of Science under the guidance of <a href="https://scholar.google.co.in/citations?user=1g1i1B4AAAAJ&hl=en" target="_blank" style="color: var(--accent); text-decoration: none;">Prof. Chandra Sekhar Seelamantula</a>.
+ 
+              Focus on transitioning research prototypes to production-ready systems with emphasis on scalability, reliability, and user experience. 
+              Built comprehensive RAG architecture with document processing, vector indexing, and LLM integration alongside medical image analysis platform.
+            </p>
+            <div class="tech-stack">
+              <span class="tech-tag">RAG Architecture</span>
+              <span class="tech-tag">FAISS Vector Indexing</span>
+              <span class="tech-tag">Ollama LLM Integration</span>
+              <span class="tech-tag">Django Full-Stack</span>
+              <span class="tech-tag">Medical Image Processing</span>
+              <span class="tech-tag">Bootstrap UI/UX</span>
+            </div>
+          </div>
+
+          <div class="image-grid-two">
+            <div class="grid-image-container">
+              <img src="rag.jpg" alt="RAG Pipeline" class="grid-image">
+              <p class="grid-caption">Comprehensive RAG workflow with query construction, routing, indexing, retrieval and generation components</p>
+            </div>
+            <div class="grid-image-container">
+              <img src="rerank.jpg" alt="Reranking System" class="grid-image">
+              <p class="grid-caption">Enhanced reranking pipeline with vector database optimization and intelligent document selection</p>
+            </div>
+          </div>
+
+          <div class="content-title">RAG Workflow Optimization</div>
+          <div class="content-description">
+            Built high-throughput system capable of processing thousands of document queries while maintaining accuracy and speed. 
+            The RAG architecture combines sophisticated document ingestion pipelines, optimized FAISS vector indexing, and intelligent 
+            reranking mechanisms. System processes multi-modal documents, extracts semantic embeddings, and leverages Ollama-driven 
+            LLMs for context-aware question answering.
+          </div>
+
+          <div class="mathematical-section">
+            <div class="math-title">Vector Similarity and Reranking Mathematics</div>
+            <div class="equation">
+              <em>sim(q, d) = cos(E_q, E_d) = (E_q · E_d) / (||E_q|| ||E_d||)</em><br/>
+              <em>score_rerank(q, d) = CrossEncoder(q, d) × α + sim(q, d) × (1-α)</em>
+            </div>
+            <div class="equation-explanation">
+              Initial retrieval uses cosine similarity between query and document embeddings. Reranking stage combines cross-encoder 
+              scores with original similarity using weighting parameter α=0.7 for optimal precision-recall balance.
+            </div>
+          </div>
+
+          
+
+          <div class="content-title">ChaksuAI Medical Intelligence Platform</div>
+          <div class="content-description">
+            Developed comprehensive Django platform for ophthalmic patient management and automated fundus image analysis. 
+            Platform combines computer vision models for optic disc (OD) and optic cup (OC) segmentation with vessel detection algorithms, 
+            creating end-to-end solution for glaucoma screening and retinal disease assessment with real-time processing capabilities.
+          </div>
+          <div class="image-container">
+            <img src="chaksu.png" alt="Mamba Architecture" class="content-image">
+            <p class="image-caption">
+              Chaksu.ai Web application
+            </p>
+          </div>
+          
+
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              
+              <a href="https://github.com/UtkarshDhagat/iisc" class="resource-link">RAG Repository</a>
+              <a href="https://chaksu.ai" class="resource-link">ChaksuAI Platform</a>
+              <a href="https://github.com/UtkarshDhagat/iisc" class="resource-link">Simulator Code</a>
+             
+            </div>
+          </div>
+        </div>
+
+        <div class="project" id="stemtec-internship">
+          <div class="project-header">
+            <h3 class="project-title">Autonomous Robotics and Edge AI Systems</h3>
+            <p class="project-meta">AI and Robotics Intern • StemTec Pvt Ltd • Apr-Sep 2024</p>
+            <p class="project-description">
+              Led development of autonomous ground vehicles integrating computer vision, ROS2 pipelines, and edge deployment. 
+              Optimized YOLOv8 models for Jetson Nano deployment while coordinating multidisciplinary team of five engineers. 
+              Developed semantic segmentation systems for edge devices with TensorRT optimization and real-time 3D object detection capabilities.
+            </p>
+            <div class="tech-stack">
+              <span class="tech-tag">ROS2 Integration</span>
+              <span class="tech-tag">YOLOv8 Edge Deployment</span>
+              <span class="tech-tag">ZED 2i Stereo Vision</span>
+              <span class="tech-tag">Intel RealSense SDK</span>
+              <span class="tech-tag">Jetson Nano Optimization</span>
+              <span class="tech-tag">Semantic Segmentation</span>
+            </div>
+          </div>
+
+          <div class="image-grid-two">
+            <div class="grid-image-container">
+              <img src="ag1.jpg" alt="AGV Prototype 1" class="grid-image">
+              <p class="grid-caption">First iteration AGV with integrated computer vision and sensor fusion capabilities</p>
+            </div>
+            <div class="grid-image-container">
+              <img src="ag2.jpg" alt="AGV Prototype 2" class="grid-image">
+              <p class="grid-caption">Second iteration AGV with enhanced sensor suite and improved mechanical design</p>
+            </div>
+          </div>
+
+          <div class="content-title">Real-Time Computer Vision Pipeline</div>
+          <div class="content-description">
+            Built robust object detection and instance segmentation pipelines operating reliably on edge hardware while maintaining 
+            low latency and high accuracy needed for autonomous navigation. System integrates computer vision, sensor fusion, 
+            and real-time decision making with ROS2 node architecture for modular pipeline integration.
+          </div>
+
+          <div class="mathematical-section">
+            <div class="math-title">3D Object Localization from Stereo Vision</div>
+            <div class="equation">
+              <em>Z = (f × B) / d</em><br/>
+              <em>X = (u - c_x) × Z / f_x</em><br/>
+              <em>Y = (v - c_y) × Z / f_y</em>
+            </div>
+            <div class="equation-explanation">
+              3D position calculation from stereo disparity: Z-depth from baseline B, focal length f, and disparity d. 
+              World coordinates (X,Y,Z) derived from image coordinates (u,v) using camera intrinsics for accurate 
+              3D object localization enabling robust obstacle avoidance and navigation planning.
+            </div>
+          </div>
+
+          
+          <div class="content-title">Semantic Segmentation on Edge Devices</div>
+          <div class="content-description">
+            Developed comprehensive semantic segmentation system supporting multiple Jetson devices (Nano, TX1/TX2, Xavier NX, AGX Xavier) 
+            with real-time inference capabilities. System includes custom model training pipeline with PyTorch, ONNX export functionality, 
+            and TensorRT optimization for deployment. Supports custom dataset creation with Labelme annotation and Pascal VOC conversion.
+          </div>
+
+          <div class="results-section">
+            <div class="results-title">Performance Metrics</div>
+            <div class="results-content">
+              <ul class="metrics-list">
+                <li>Object detection: <span class="metric-value">15 FPS</span> with sub-50ms latency on Jetson Nano</li>
+                <li>Detection accuracy: <span class="metric-value">92% mAP@0.5</span> maintained at edge</li>
+                
+
+                <li>Semantic segmentation: <span class="metric-value">Real-time inference</span> on embedded devices</li>
+                <li>Training efficiency: <span class="metric-value">86% accuracy</span> after 10 epochs on Pascal VOC</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="video-container">
+            <div class="video-grid-two">
+              <div class="video-item">
+                <div class="video-label">Instance Segmentation</div>
+                <video controls class="video-player">
+                  <source src="agv1.mp4" type="video/mp4">
+                </video>
+              </div>
+              <div class="video-item">
+                <div class="video-label">3D Object Detection</div>
+                <video controls class="video-player">
+                  <source src="agv2.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+          </div>
+
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="https://github.com/UtkarshDhagat/semantic-segmentation-edge" class="resource-link">Edge AI Segmentation</a>
+              <a href="https://stemtec.in" class="resource-link">StemTec Pvt Ltd</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="project" id="ollash-project">
+          <h3 class="project-title">
+            <a href="https://ollash.dev/" style="color: var(--accent); text-decoration: none;">Ollash - Text-to-Shell Command Generator</a>
+          </h3>
+          <p class="project-meta">Open Source Tool • Natural Language Processing</p>
+          <p class="project-description">
+            Command-line tool that converts natural language to shell commands using local LLM deployment. 
+            Features semantic search through codebases, safety validation with confirmation prompts, and command history learning 
+            with privacy-first architecture. Supports Linux, macOS, and Windows with built-in risk assessment and secure execution.
+          </p>
+          <iframe 
+            class="youtube-embed" 
+            src="https://www.youtube.com/embed/NuwPabaI_wg" 
+            title="Ollash Demo"
+            frameborder="0" 
+            allowfullscreen>
+          </iframe>
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="https://github.com/Team-Chocos/ollash.sh" class="resource-link">GitHub Repository</a>
+              <a href="https://ollash.dev" class="resource-link">Project Website</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project" id="vitafile-project">
+          <h3 class="project-title">
+            <a href="https://github.com/UtkarshDhagat/VitaFile" style="color: var(--accent); text-decoration: none;">VitaFile - Post-Discharge Health Management Platform</a>
+          </h3>
+          <p class="project-meta">Healthcare Technology • Team Cornflakes</p>
+          <p class="project-description">
+            Comprehensive post-discharge health management system bridging hospital and home care environments. 
+            Features unified access to family EHRs with multilingual support, voice interaction capabilities, 
+            OCR digitization for medical documents, and smart analytics for continuous care coordination 
+            with intelligent recommendations and family care management.
+          </p>
+          <iframe 
+            class="youtube-embed" 
+            src="https://www.youtube.com/embed/UlY_NB3eXY4" 
+            title="VitaFile Demo"
+            frameborder="0" 
+            allowfullscreen>
+          </iframe>
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="https://github.com/UtkarshDhagat/VitaFile" class="resource-link">GitHub Repository</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project" id="mrig-project">
+          <h3 class="project-title">
+            <a href="https://github.com/UtkarshDhagat/MRIG" style="color: var(--accent); text-decoration: none;">MRIG - Medical Report Intelligence Generator</a>
+          </h3>
+          <p class="project-meta">AI-Powered Healthcare • Medical Image Analysis</p>
+          <p class="project-description">
+            AI-powered medical report generation system with X-ray analysis, automated PDF generation, and LLM-based patient interaction. 
+            Features custom CNN model for feature extraction and risk visualization for 13 health parameters including atelectasis, 
+            cardiomegaly, consolidation, edema, effusion, emphysema, fibrosis, infiltration, mass, nodule, pleural thickening, 
+            pneumonia, and pneumothorax detection with intelligent risk assessment and patient education capabilities.
+          </p>
+          <iframe 
+            class="youtube-embed" 
+            src="https://www.youtube.com/embed/8et33rwT5zc" 
+            title="MRIG Demo"
+            frameborder="0" 
+            allowfullscreen>
+          </iframe>
+          <div class="content-title">Core Features and Functionality</div>
+          <div class="content-description">
+            System enables healthcare professionals to upload X-ray images for automated analysis through custom CNN models. 
+            Generates detailed PDF reports with extracted health parameters, provides patient portal for report upload and vital 
+            information extraction, and includes risk visualization using interactive risk meters for comprehensive health status understanding. 
+            Custom LLM chatbot trained on proprietary medical data answers patient questions about their reports.
+          </div>
+          <div class="resources-section">
+            <div class="resources-title">Resources</div>
+            <div class="resource-links">
+              <a href="https://github.com/UtkarshDhagat/MRIG" class="resource-link">GitHub Repository</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar toggle functionality
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('main-content');
+      
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('show-mobile');
+      } else {
+        sidebar.classList.toggle('hidden');
+        mainContent.classList.toggle('expanded');
+      }
+    }
+
+    // Dropdown toggle functionality
+    function toggleDropdown(dropdownId) {
+      const dropdown = document.getElementById(dropdownId);
+      const button = dropdown.previousElementSibling;
+      
+      dropdown.classList.toggle('show');
+      button.classList.toggle('active');
+    }
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+          
+          // Close mobile sidebar after navigation
+          if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.remove('show-mobile');
+          }
+        }
+      });
+    });
+
+    // Update active nav links based on scroll position
+    function updateActiveNavLinks() {
+      const sections = document.querySelectorAll('section, .project[id]');
+      const navLinks = document.querySelectorAll('.sidebar .nav-link[href^="#"]');
+      
+      let current = '';
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 100 && rect.bottom > 100) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    // Listen for scroll events
+    window.addEventListener('scroll', updateActiveNavLinks);
+    window.addEventListener('load', updateActiveNavLinks);
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('main-content');
+      
+      if (window.innerWidth > 768) {
+        sidebar.classList.remove('show-mobile');
+        if (sidebar.classList.contains('hidden')) {
+          mainContent.classList.add('expanded');
+        } else {
+          mainContent.classList.remove('expanded');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
